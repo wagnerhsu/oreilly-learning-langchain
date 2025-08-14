@@ -1,0 +1,4 @@
+My name is Wagner.
+I am a software engineer.
+I love coding and solving problems.
+I enjoy learning new technologies.
