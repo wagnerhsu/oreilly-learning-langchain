@@ -1,21 +1,10 @@
-from langchain_openai.chat_models import ChatOpenAI
-import time
-from dotenv import load_dotenv
-import os
+from common import create_chat_model, measure_response_time
 
-load_dotenv()
-base_url = os.getenv("BASE_URL", "http://localhost:1234/v1")
-api_key = os.getenv("API_KEY", "lm-studio")
+model = create_chat_model(model_name="gpt-3.5-turbo")
 
-model = ChatOpenAI(base_url=base_url, api_key=api_key, model="gpt-3.5-turbo")
-
-start_time = time.time()
-response = model.invoke("The sky is")
-end_time = time.time()
-elapsed = end_time - start_time
+response, elapsed = measure_response_time(model.invoke, "The sky is")
 
 print(response.content)
-
 print(f"Response time: {elapsed:.2f} seconds")
 
 # If your backend supports token usage, you may be able to access it like this:

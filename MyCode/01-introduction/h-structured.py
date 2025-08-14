@@ -1,42 +1,31 @@
-from langchain_openai import ChatOpenAI
-from pydantic import BaseModel
-from dotenv import load_dotenv
-import os
-import json
+from common import (
+    create_chat_model,
+    parse_json_response,
+    create_structured_prompt,
+    print_debug_info,
+    AnswerWithJustification,
+    create_structured_prompt
+)
 
-load_dotenv()
-base_url = os.getenv("BASE_URL", "http://localhost:1234/v1")
-api_key = os.getenv("API_KEY", "lm-studio")
+llm = create_chat_model(temperature=0)
 
-class AnswerWithJustification(BaseModel):
-    """An answer to the user's question along with justification for the answer."""
-
-    answer: str
-    """The answer to the user's question"""
-    justification: str
-    """Justification for the answer"""
-
-llm = ChatOpenAI(base_url=base_url, api_key=api_key, temperature=0)
-
-# Alternative approach: Use prompt engineering to get structured output
-prompt = """Answer the following question and provide your response in JSON format with the following structure:
-{
+# Create structured prompt using common function
+question = "What weighs more, a pound of bricks or a pound of feathers?"
+response_schema = {
     "answer": "your answer here",
     "justification": "your justification here"
 }
 
-Question: What weighs more, a pound of bricks or a pound of feathers?
+prompt = create_structured_prompt(question, response_schema)
 
-Response (JSON only):"""
-
+# Use invoke instead of with_structured_output since LM Studio doesn't support structured output API
 response = llm.invoke(prompt)
-print("Raw response:", response.content)
+print_debug_info(response)
 
-# Try to parse the JSON response
-try:
-    json_response = json.loads(response.content)
-    structured_response = AnswerWithJustification(**json_response)
-    print("Structured response:", structured_response)
-except Exception as e:
-    print(f"Could not parse as structured output: {e}")
-    print("Content:", response.content)
+# Parse JSON response using common function
+success, result = parse_json_response(response.content, AnswerWithJustification)
+
+if success:
+    print("Structured response:", result)
+else:
+    print(f"Failed to parse response: {result}")

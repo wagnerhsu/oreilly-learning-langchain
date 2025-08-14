@@ -1,26 +1,9 @@
-from langchain_openai.chat_models import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from dotenv import load_dotenv
-import os
+from common import create_chat_model, create_chat_prompt_from_files
 
-load_dotenv()
-base_url = os.getenv("BASE_URL", "http://localhost:1234/v1")
-api_key = os.getenv("API_KEY", "lm-studio")
+model = create_chat_model()
 
-# both `template` and `model` can be reused many times
-
-template = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            'Answer the question based on the context below. If the question cannot be answered using the information provided, answer with "I don\'t know".',
-        ),
-        ("human", "Context: {context}"),
-        ("human", "Question: {question}"),
-    ]
-)
-
-model = ChatOpenAI(base_url=base_url, api_key=api_key)
+# Load template from files using common function
+template = create_chat_prompt_from_files("system_message.txt", "question_message.txt")
 
 # `prompt` and `completion` are the results of using template and model once
 
