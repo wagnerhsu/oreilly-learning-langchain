@@ -1,10 +1,21 @@
+import ssl
+import urllib3
+
+# 忽略 SSL 证书验证，仅用于开发环境
+ssl._create_default_https_context = ssl._create_unverified_context
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 from langchain_core.messages import (
     SystemMessage,
     HumanMessage,
     AIMessage,
     trim_messages,
 )
-from langchain_openai import ChatOpenAI
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from common import create_chat_model
 
 # Define sample messages
 messages = [
@@ -25,7 +36,7 @@ messages = [
 trimmer = trim_messages(
     max_tokens=65,
     strategy="last",
-    token_counter=ChatOpenAI(model="gpt-4o"),
+    token_counter=create_chat_model(),
     include_system=True,
     allow_partial=False,
     start_on="human",

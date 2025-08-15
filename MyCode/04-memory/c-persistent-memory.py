@@ -1,5 +1,9 @@
 from typing import Annotated, TypedDict
+import sys
+import os
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from common import create_chat_model
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END, add_messages
@@ -12,7 +16,7 @@ class State(TypedDict):
 
 builder = StateGraph(State)
 
-model = ChatOpenAI()
+model = create_chat_model()
 
 
 def chatbot(state: State):

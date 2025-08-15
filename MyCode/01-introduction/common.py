@@ -1,7 +1,4 @@
-"""
-Common utilities for LangChain projects.
-This module contains frequently used functions and configurations.
-"""
+
 
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate

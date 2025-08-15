@@ -1,11 +1,15 @@
 from typing import Annotated, TypedDict
+import sys
+import os
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from common import create_chat_model
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
-model = ChatOpenAI()
+model = create_chat_model()
 
 
 class State(TypedDict):
