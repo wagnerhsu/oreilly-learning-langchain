@@ -3,11 +3,12 @@ from dotenv import load_dotenv
 import time
 import os
 from typing import Any
+from common import create_chat_model
 
 load_dotenv()
 base_url: str = os.getenv("BASE_URL", "http://localhost:1234/v1")
 api_key: str = os.getenv("API_KEY", "lm-studio")
-
+model = create_chat_model(model_name="openai/gpt-oss-20b")
 template: PromptTemplate = PromptTemplate.from_template("""Answer the question based on the context below. If the question cannot be answered using the information provided, answer with \"I don't know\".
 
 Context: {context}
@@ -23,4 +24,6 @@ response: Any = template.invoke(
     }
 )
 
+print(response)
+response = model.invoke(response)
 print(response)

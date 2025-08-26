@@ -6,7 +6,7 @@ load_dotenv()
 base_url = os.getenv("BASE_URL", "http://localhost:1234/v1")
 api_key = os.getenv("API_KEY", "lm-studio")
 
-model = ChatOpenAI(model="gpt-3.5-turbo", base_url=base_url, api_key=api_key)
+model = ChatOpenAI(model="openai/gpt-oss-20b", base_url=base_url, api_key=api_key)
 
 completion = model.invoke("Hi there!")
 # Hi!

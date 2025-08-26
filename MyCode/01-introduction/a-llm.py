@@ -1,6 +1,6 @@
 from common import create_chat_model, measure_response_time
 
-model = create_chat_model(model_name="gpt-3.5-turbo")
+model = create_chat_model(model_name="open/gpt-oss-20b")
 
 response, elapsed = measure_response_time(model.invoke, "The sky is")
 

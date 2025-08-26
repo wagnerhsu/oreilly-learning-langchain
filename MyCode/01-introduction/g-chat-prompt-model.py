@@ -1,6 +1,6 @@
 from common import create_chat_model, create_chat_prompt_from_files
 
-model = create_chat_model()
+model = create_chat_model(model_name="openai/gpt-oss-20b")
 
 # Load template from files using common function
 template = create_chat_prompt_from_files("system_message.txt", "question_message.txt")

@@ -4,16 +4,16 @@ from common import (
     create_structured_prompt,
     print_debug_info,
     AnswerWithJustification,
-    create_structured_prompt
+    create_structured_prompt,
 )
 
-llm = create_chat_model(temperature=0)
+llm = create_chat_model(model_name="openai/gpt-oss-20b", temperature=0)
 
 # Create structured prompt using common function
 question = "What weighs more, a pound of bricks or a pound of feathers?"
 response_schema = {
     "answer": "your answer here",
-    "justification": "your justification here"
+    "justification": "your justification here",
 }
 
 prompt = create_structured_prompt(question, response_schema)

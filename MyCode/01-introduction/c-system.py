@@ -10,7 +10,7 @@ load_dotenv()
 base_url: str = os.getenv("BASE_URL", "http://localhost:1234/v1")
 api_key: str = os.getenv("API_KEY", "lm-studio")
 
-model: ChatOpenAI = ChatOpenAI(base_url=base_url, api_key=api_key)
+model: ChatOpenAI = ChatOpenAI(base_url=base_url, api_key=api_key, model_name="open/gpt-oss-20b")
 system_msg: SystemMessage = SystemMessage(
     "You are a helpful assistant that responds to questions with three exclamation marks."
 )

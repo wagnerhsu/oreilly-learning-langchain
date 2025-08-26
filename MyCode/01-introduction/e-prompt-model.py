@@ -4,10 +4,9 @@ from dotenv import load_dotenv
 import time
 import os
 from typing import Any
+from common import create_chat_model
 
-load_dotenv()
-base_url: str = os.getenv("BASE_URL", "http://localhost:1234/v1")
-api_key: str = os.getenv("API_KEY", "lm-studio")
+
 # both `template` and `model` can be reused many times
 
 template: PromptTemplate = PromptTemplate.from_template(
@@ -20,7 +19,7 @@ Question: {question}
 Answer: """
 )
 
-model: ChatOpenAI = ChatOpenAI(base_url=base_url, api_key=api_key, model="gpt-3.5-turbo")
+model: ChatOpenAI = create_chat_model(model_name="openai/gpt-oss-20b")
 
 # `prompt` and `completion` are the results of using template and model once
 
