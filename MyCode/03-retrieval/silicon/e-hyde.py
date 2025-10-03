@@ -1,3 +1,5 @@
+from math import ceil
+
 from langchain_community.document_loaders import TextLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -6,7 +8,13 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import chain
 from langchain_core.output_parsers import StrOutputParser
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+base_url = os.environ.get("BASE_URL")
+api_key = os.environ.get("API_KEY")
+model_name = os.environ.get("MODEL")
+embedding_model_name = os.environ.get("EMBEDDING_MODEL")
 # See docker command above to launch a postgres instance with pgvector enabled.
 connection = "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
 
@@ -17,10 +25,18 @@ text_splitter = RecursiveCharacterTextSplitter(
 documents = text_splitter.split_documents(raw_documents)
 
 # Create embeddings for the documents
-embeddings_model = OpenAIEmbeddings()
+embeddings_model = OpenAIEmbeddings(model=embedding_model_name,base_url=base_url, api_key=api_key)
 
-db = PGVector.from_documents(
-    documents, embeddings_model, connection=connection)
+# Batch documents to avoid exceeding API batch size limit
+BATCH_SIZE = 64
+num_batches = ceil(len(documents) / BATCH_SIZE)
+db = None
+for i in range(num_batches):
+    batch_docs = documents[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
+    if i == 0:
+        db = PGVector.from_documents(batch_docs, embeddings_model, connection=connection)
+    else:
+        db.add_documents(batch_docs)
 
 # create retriever to retrieve 2 relevant documents
 retriever = db.as_retriever(search_kwargs={"k": 5})
@@ -28,7 +44,7 @@ retriever = db.as_retriever(search_kwargs={"k": 5})
 prompt_hyde = ChatPromptTemplate.from_template(
     """Please write a passage to answer the question.\n Question: {question} \n Passage:""")
 
-generate_doc = (prompt_hyde | ChatOpenAI(temperature=0) | StrOutputParser())
+generate_doc = (prompt_hyde | ChatOpenAI(model=model_name,base_url=base_url,api_key=api_key, temperature=0) | StrOutputParser())
 
 """
 Next, we take the hypothetical document generated above and use it as input to the retriever, 
@@ -42,7 +58,7 @@ prompt = ChatPromptTemplate.from_template(
     """Answer the question based only on the following context: {context} Question: {question} """
 )
 
-llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+llm = ChatOpenAI(model=model_name,base_url=base_url,api_key=api_key, temperature=0)
 
 
 @chain

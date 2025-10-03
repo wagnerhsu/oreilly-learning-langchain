@@ -1,3 +1,5 @@
+from math import ceil
+
 from langchain_community.document_loaders import TextLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -5,6 +7,14 @@ from langchain_postgres.vectorstores import PGVector
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import chain
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+base_url = os.environ.get("BASE_URL")
+api_key = os.environ.get("API_KEY")
+model_name = os.environ.get("MODEL")
+embedding_model_name = os.environ.get("EMBEDDING_MODEL")
 
 # See docker command above to launch a postgres instance with pgvector enabled.
 connection = "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
@@ -16,10 +26,18 @@ text_splitter = RecursiveCharacterTextSplitter(
 documents = text_splitter.split_documents(raw_documents)
 
 # Create embeddings for the documents
-embeddings_model = OpenAIEmbeddings()
+embeddings_model = OpenAIEmbeddings(model=embedding_model_name,base_url=base_url, api_key=api_key)
 
-db = PGVector.from_documents(
-    documents, embeddings_model, connection=connection)
+# Batch documents to avoid exceeding API batch size limit
+BATCH_SIZE = 64
+num_batches = ceil(len(documents) / BATCH_SIZE)
+db = None
+for i in range(num_batches):
+    batch_docs = documents[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
+    if i == 0:
+        db = PGVector.from_documents(batch_docs, embeddings_model, connection=connection)
+    else:
+        db.add_documents(batch_docs)
 
 # create retriever to retrieve 2 relevant documents
 retriever = db.as_retriever(search_kwargs={"k": 5})
@@ -29,10 +47,11 @@ prompt_rag_fusion = ChatPromptTemplate.from_template(
 
 
 def parse_queries_output(message):
-    return message.content.split('\n')
+    # Filter out any empty strings that may result from splitting
+    return [q.strip() for q in message.content.split('\n') if q.strip()]
 
 
-llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+llm = ChatOpenAI(model=model_name,base_url=base_url,api_key=api_key, temperature=0)
 query_gen = prompt_rag_fusion | llm | parse_queries_output
 
 query = "Who are the key figures in the ancient greek history of philosophy?"
@@ -67,7 +86,7 @@ def reciprocal_rank_fusion(results: list[list], k=60):
     return [documents[doc_str] for doc_str in reranked_doc_strs]
 
 
-retrieval_chain = query_gen | retriever.batch | reciprocal_rank_fusion
+retrieval_chain = query_gen | (lambda queries: retriever.batch(queries)) | reciprocal_rank_fusion
 
 result = retrieval_chain.invoke(query)
 

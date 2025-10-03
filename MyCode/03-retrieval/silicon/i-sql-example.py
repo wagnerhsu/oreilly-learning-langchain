@@ -15,10 +15,18 @@ from langchain_community.utilities import SQLDatabase
 from langchain.chains import create_sql_query_chain
 # replace this with the connection details of your db
 from langchain_openai import ChatOpenAI
+import os
+from dotenv import load_dotenv
+import re
+load_dotenv()
+base_url = os.environ.get("BASE_URL")
+api_key = os.environ.get("API_KEY")
+model_name = os.environ.get("MODEL")
+embedding_model_name = os.environ.get("EMBEDDING_MODEL")
 
 db = SQLDatabase.from_uri("sqlite:///Chinook.db")
 print(db.get_usable_table_names())
-llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+llm = ChatOpenAI(model=model_name,base_url=base_url,api_key=api_key, temperature=0)
 
 # convert question to sql query
 write_query = create_sql_query_chain(llm, db)

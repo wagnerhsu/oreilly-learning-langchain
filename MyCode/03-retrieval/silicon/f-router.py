@@ -4,7 +4,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnableLambda
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+base_url = os.environ.get("BASE_URL")
+api_key = os.environ.get("API_KEY")
+model_name = os.environ.get("MODEL")
+embedding_model_name = os.environ.get("EMBEDDING_MODEL")
 
 # Data model class
 class RouteQuery(BaseModel):
@@ -17,7 +23,7 @@ class RouteQuery(BaseModel):
 
 # Prompt template
 # LLM with function call
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
+llm = ChatOpenAI(model=model_name,base_url=base_url,api_key=api_key, temperature=0)
 
 """
 with_structured_output: Model wrapper that returns outputs formatted to match the given schema.

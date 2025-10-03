@@ -22,6 +22,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import chain
 from dotenv import load_dotenv
+from math import ceil
 import os
 
 load_dotenv()
@@ -42,8 +43,16 @@ documents = text_splitter.split_documents(raw_documents)
 # Create embeddings for the documents
 embeddings_model = OpenAIEmbeddings(model=embedding_model_name,base_url=base_url, api_key=api_key)
 
-db = PGVector.from_documents(
-    documents, embeddings_model, connection=connection)
+# Batch documents to avoid exceeding API batch size limit
+BATCH_SIZE = 64
+num_batches = ceil(len(documents) / BATCH_SIZE)
+db = None
+for i in range(num_batches):
+    batch_docs = documents[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
+    if i == 0:
+        db = PGVector.from_documents(batch_docs, embeddings_model, connection=connection)
+    else:
+        db.add_documents(batch_docs)
 
 # create retriever to retrieve 2 relevant documents
 retriever = db.as_retriever(search_kwargs={"k": 2})

@@ -3,12 +3,19 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import chain
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+import os
+from dotenv import load_dotenv
+load_dotenv()
+base_url = os.environ.get("BASE_URL")
+api_key = os.environ.get("API_KEY")
+model_name = os.environ.get("MODEL")
+embedding_model_name = os.environ.get("EMBEDDING_MODEL")
 
 physics_template = """You are a very smart physics professor. You are great at     answering questions about physics in a concise and easy-to-understand manner.     When you don't know the answer to a question, you admit that you don't know. Here is a question: {query}"""
 math_template = """You are a very good mathematician. You are great at answering     math questions. You are so good because you are able to break down hard     problems into their component parts, answer the component parts, and then     put them together to answer the broader question. Here is a question: {query}"""
 
 # Embed prompts
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(model=embedding_model_name,base_url=base_url, api_key=api_key)
 prompt_templates = [physics_template, math_template]
 prompt_embeddings = embeddings.embed_documents(prompt_templates)
 
@@ -24,7 +31,7 @@ def prompt_router(query):
     return PromptTemplate.from_template(most_similar)
 
 
-semantic_router = (prompt_router | ChatOpenAI() | StrOutputParser())
+semantic_router = (prompt_router | ChatOpenAI(model=model_name,base_url=base_url,api_key=api_key, temperature=0) | StrOutputParser())
 
 result = semantic_router.invoke("What's a black hole")
 print("\nSemantic router result: ", result)
